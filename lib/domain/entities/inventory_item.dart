@@ -1,19 +1,21 @@
 
 
-import 'package:smartory_app/domain/entities/product_entity.dart';
+import 'package:smartory_app/domain/entities/product.dart';
 
-class InventoryProduct {
+class InventoryItem {
 
-  final String id;
+  final int id;
   final Product product;
   final double quantity;
   final DateTime? expirationDate;
+  final bool isFavorite;
   
-  InventoryProduct({
+  InventoryItem({
     required this.id,
     required this.product,
     required this.quantity,
     this.expirationDate,
+    this.isFavorite = false,
   });
   
 }

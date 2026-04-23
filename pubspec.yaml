@@ -1,7 +1,7 @@
 name: smartory_app
 description: "A new Flutter project."
 publish_to: 'none'
-version: 0.1.0+1
+version: 0.1.0
 
 environment:
   sdk: ^3.11.4
@@ -11,7 +11,12 @@ dependencies:
   dio: ^5.9.2
   flutter:
     sdk: flutter
+  flutter_riverpod: ^3.3.1
+  flutter_secure_storage: ^10.0.0
+  go_router: ^17.2.0
+  jwt_decoder: ^2.0.1
   path_provider: ^2.1.5
+  provider: ^6.1.5+1
   record: ^6.2.0
 
 dev_dependencies:

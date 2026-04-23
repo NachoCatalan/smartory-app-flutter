@@ -1,7 +1,6 @@
 
-
 import 'package:smartory_app/domain/datasources/product_datasource.dart';
-import 'package:smartory_app/domain/entities/product_entity.dart';
+import 'package:smartory_app/domain/entities/product.dart';
 import 'package:smartory_app/domain/repositories/product_repository.dart';
 
 class ProductsRepositoryImpl extends ProductRepository {
@@ -14,13 +13,17 @@ class ProductsRepositoryImpl extends ProductRepository {
 
   @override
   Future<Product?> getProductById(String id) {
-    // TODO: implement getProductById
     throw UnimplementedError();
   }
 
   @override
-  Future<List<Product>> getProducts() {
-    // TODO: implement getProducts
+  Future<List<Product>?> getProducts() {
+    return productDatasource.getProducts();
+  }
+  
+  @override
+  Future<Product?> getProductByName(String name) {
+    // TODO: implement getProductByName
     throw UnimplementedError();
   }
 }

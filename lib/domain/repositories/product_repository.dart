@@ -1,10 +1,13 @@
 
-import 'package:smartory_app/domain/entities/product_entity.dart';
+import 'package:smartory_app/domain/entities/product.dart';
 
 abstract class ProductRepository {
 
-  Future<List<Product>> getProducts();
+  Future<List<Product>?> getProducts();
 
-  Future<Product?> getProductById(String id); 
+  Future<Product?> getProductById(String id);
+  
+  Future<Product?> getProductByName(String name);
+
 
 }

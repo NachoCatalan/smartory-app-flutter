@@ -1,14 +1,18 @@
 
-import 'package:smartory_app/domain/entities/inventory_product_entity.dart';
+import 'package:smartory_app/domain/entities/entities.dart';
 
 abstract class InventoryDatasource {
 
-  Future<InventoryProduct?> getInventoryItemById(String id);
+  Future<InventoryItem?> getInventoryItemById(String id);
 
-  Future<List<InventoryProduct>> getInventoryProducts();
+  Future<Inventory> getMyInventory();
 
-  Future<void> addProduct(InventoryProduct item);
+  Future<void> addItem(InventoryItem item);
 
-  Future<void> removeProduct(String productId);
-  
+  Future<void> removeItem(String productId);
+
+  Future<void> editProduct(InventoryItem item);
+
+  Future<void> toggleIsFavorite(String itemId);
+
 }

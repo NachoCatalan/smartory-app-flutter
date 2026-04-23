@@ -18,13 +18,12 @@ class SendAudioService {
         )
       });
 
-      final response = await dio.post(
+      await dio.post(
         url,
         data: formData,  
       );
-      print('$response');
     } catch (e) {
-      print('Error al enviar el audio $e');
+      throw Exception('Error al enviar el audio $e');
     }
   }
 }

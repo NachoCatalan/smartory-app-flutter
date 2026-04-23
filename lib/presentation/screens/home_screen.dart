@@ -1,239 +1,102 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:smartory_app/presentation/screens/inventory_screen.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smartory_app/presentation/providers/providers.dart';
 
-import '../../services/index.dart';
+import 'package:smartory_app/presentation/screens/screens.dart';
 
-class HomeScreen extends StatelessWidget {
+import '../widgets/widgets.dart';
+
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Home screen'),
-          actions: [
-            IconButton(
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => InventoryScreen())
-                );
-              },
-              icon: Icon(Icons.inventory_2_sharp),
-              color: Colors.indigo,
-              iconSize: 35,
-            )
-          ],
-        ),
-        body: SafeArea(
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Column(
-                spacing: 10,
-                children: [
-                  Expanded(child: Placeholder()),
-                  AudioMedia(),
-                ],
-              ),
-            ),
+    final screenSize = MediaQuery.of(context).size;
+    final productProvider = ref.read(productsProvider.notifier);
+    final logout = ref.read(authProvider.notifier).logout;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Home'),
+        actions: [
+          IconButton(onPressed: () {
+            productProvider.loadProducts();
+          }, icon: Icon(Icons.refresh)),
+          IconButton(
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => InventoryScreen()),
+              );
+            },
+            icon: Icon(Icons.inventory_2_sharp),
+            color: Colors.indigo,
+            iconSize: 35,
           ),
-        ),
+        ],
       ),
-    );
-  }
-}
-
-class AudioMedia extends StatefulWidget {
-  const AudioMedia({super.key});
-
-  @override
-  State<AudioMedia> createState() => _AudioMediaState();
-}
-
-class _AudioMediaState extends State<AudioMedia> {
-  final AudioService audioService = AudioService();
-  final AudioPlayerService audioPlayerService = AudioPlayerService();
-  final SendAudioService sendAudioService = SendAudioService();
-
-  bool isRecording = false;
-  String? audioPath;
-
-  Future<void> startRecording() async {
-    await audioService.startRecording();
-    setState(() {
-      isRecording = true;
-      audioPath = null;
-    });
-  }
-
-  Future<String?> stopRecording() async {
-    final path = await audioService.stopRecording();
-    setState(() {
-      isRecording = false;
-      audioPath = path;
-    });
-    return path;
-  }
-
-  Future<void> sendAudio() async {
-    await sendAudioService.sendAudio(audioPath!);
-  }
-
-  Future<void> deleteAudio() async {
-    try {
-      File file = File(audioPath!);
-      if (await file.exists()) {
-        await file.delete();
-        setState(() {
-          audioPath = null;
-        });
-      }
-    } catch (e) {
-      print(e);
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    audioService.init();
-  }
-
-  @override
-  void dispose() {
-    audioService.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      spacing: 10,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        (audioPath != null)
-            ? MediaButtons(
-                audioPath: audioPath,
-                deleteAudio: deleteAudio,
-                sendAudio: sendAudio,
-              )
-            : MicButton(
-                isRecording: isRecording,
-                startRecording: startRecording,
-                stopRecording: stopRecording,
-              ),
-      ],
-    );
-  }
-}
-
-class MediaButtons extends StatelessWidget {
-  final String? audioPath;
-  final AudioPlayerService audioPlayerService = AudioPlayerService();
-
-  final Future<void> Function() deleteAudio;
-  final Future<void> Function() sendAudio;
-
-  MediaButtons({
-    super.key,
-    required this.audioPath,
-    required this.deleteAudio,
-    required this.sendAudio,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: Colors.grey),
-          ),
-          child: IconButton(
-            onPressed: deleteAudio,
-            iconSize: 30,
-            icon: Icon(Icons.delete),
-          ),
-        ),
-        Container(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: Colors.black, width: 3.5),
-          ),
+      body: SafeArea(
+        left: false,
+        right: false,
+        child: Center(
           child: Padding(
-            padding: EdgeInsets.all(12.0),
-            child: IconButton(
-              onPressed: () {
-                audioPlayerService.start(audioPath!);
-              },
-              icon: Icon(Icons.play_arrow, color: Colors.black, size: 40),
+            padding: const EdgeInsets.all(12.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                ProductCarrousel(
+                  screenSize: screenSize,
+                ),
+                AudioMedia(),
+              ],
             ),
           ),
         ),
-        Container(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: Colors.grey),
-          ),
-          child: IconButton(
-            onPressed: sendAudio,
-            iconSize: 30,
-            icon: Icon(Icons.arrow_circle_right_outlined),
-          ),
-        ),
-      ],
-    );
-  }
-}
+      ),
 
-class MicButton extends StatelessWidget {
-  const MicButton({
-    super.key,
-    required this.isRecording,
-    required this.startRecording,
-    required this.stopRecording,
-  });
-
-  final bool isRecording;
-  final Future<void> Function() startRecording;
-  final Future<String?> Function() stopRecording;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onLongPressStart: (_) async {
-        await startRecording();
-      },
-      onLongPressEnd: (_) async {
-        await stopRecording();
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: isRecording ? Colors.redAccent : Colors.deepPurple.shade400,
-            width: 3.5,
-          ),
-        ),
+      drawer: Drawer(
         child: Padding(
-          padding: EdgeInsets.all(12.0),
-          child: SizedBox(
-            width: 50,
-            height: 50,
-            child: Icon(
-              Icons.mic_sharp,
-              color: isRecording
-                  ? Colors.redAccent
-                  : Colors.deepPurple.shade400,
-              size: 50,
-            ),
+          padding: const EdgeInsets.symmetric(vertical: 70, horizontal: 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Menu',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
+              ),
+              SizedBox(
+                width: double.infinity,
+                child: Container(
+                  margin: EdgeInsets.symmetric(vertical: 15),
+                  height: 1,
+                  decoration: BoxDecoration(
+                    border: Border.all(width: 1.2, color: Colors.indigo),
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: () {},
+                child: Text('Home', style: TextStyle(fontSize: 20)),
+              ),
+              TextButton(
+                onPressed: () {},
+                child: Text('Inventory', style: TextStyle(fontSize: 20)),
+              ),
+              TextButton(
+                onPressed: () async {
+                  await logout();
+                },
+                child: Text('Cerrar sesión', style: TextStyle(fontSize: 20)),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 }
+

@@ -1,10 +1,15 @@
 
-import 'package:smartory_app/domain/entities/product_entity.dart';
+import 'package:smartory_app/domain/entities/product.dart';
 
 abstract class ProductDatasource {
 
-  Future<List<Product>> getProducts();
+  // TODO: implementar paginación
+  Future<List<Product>?> getProducts();
 
-  Future<Product?> getProductById(String id); 
+  Future<Product?> getProductById(String id);
+  
+  Future<Product?> getProductByName(String name);
+
+
 
 }
