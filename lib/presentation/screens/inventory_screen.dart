@@ -12,9 +12,12 @@ class InventoryScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text('Inventario'),
         actions: [
-          IconButton(onPressed: () {
-            ref.read(inventoryProvider.notifier).loadInventory();
-          }, icon: Icon(Icons.refresh_outlined)),
+          IconButton(
+            onPressed: () {
+              ref.read(inventoryProvider.notifier).loadInventory();
+            },
+            icon: Icon(Icons.refresh_outlined),
+          ),
         ],
       ),
       body: Padding(

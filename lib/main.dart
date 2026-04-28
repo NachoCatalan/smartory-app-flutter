@@ -3,11 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:smartory_app/config/config.dart';
 
-
 void main() {
-  runApp(
-    ProviderScope(child: MainApp())
-  );
+  runApp(ProviderScope(child: MainApp()));
 }
 
 class MainApp extends ConsumerWidget {
@@ -19,7 +16,7 @@ class MainApp extends ConsumerWidget {
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       routerConfig: router,
-      theme: themeData
+      theme: themeData,
     );
   }
 }

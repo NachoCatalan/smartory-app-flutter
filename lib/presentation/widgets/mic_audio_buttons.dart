@@ -1,10 +1,8 @@
-
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 
 import '../../services/services.dart';
-
 
 class AudioMedia extends StatefulWidget {
   const AudioMedia({super.key});
@@ -71,20 +69,32 @@ class _AudioMediaState extends State<AudioMedia> {
   @override
   Widget build(BuildContext context) {
     return Row(
-      spacing: 10,
+      mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
+      spacing: 5,
       children: [
-        (audioPath != null)
-            ? MediaButtons(
-                audioPath: audioPath,
-                deleteAudio: deleteAudio,
-                sendAudio: sendAudio,
-              )
-            : MicButton(
-                isRecording: isRecording,
-                startRecording: startRecording,
-                stopRecording: stopRecording,
-              ),
+        AnimatedSwitcher(
+          duration: Duration(milliseconds: 250),
+          transitionBuilder: (child, animation) {
+            return FadeTransition(
+              opacity: animation,
+              child: ScaleTransition(scale: animation, child: child),
+            );
+          },
+          child: (audioPath != null)
+              ? MediaButtons(
+                  key: const ValueKey('media-buttons'),
+                  audioPath: audioPath,
+                  deleteAudio: deleteAudio,
+                  sendAudio: sendAudio,
+                )
+              : MicButton(
+                  key: const ValueKey('mic-button'),
+                  isRecording: isRecording,
+                  startRecording: startRecording,
+                  stopRecording: stopRecording,
+                ),
+        ),
       ],
     );
   }
@@ -107,42 +117,42 @@ class MediaButtons extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      spacing: 5,
       children: [
         Container(
+          width: 44,
+          height: 44,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(color: Colors.grey),
+            color: Colors.orangeAccent,
           ),
           child: IconButton(
             onPressed: deleteAudio,
-            iconSize: 30,
-            icon: Icon(Icons.delete),
+            icon: Icon(Icons.delete, color: Colors.white),
           ),
         ),
         Container(
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(color: Colors.black, width: 3.5),
+            color: Colors.orangeAccent,
           ),
-          child: Padding(
-            padding: EdgeInsets.all(12.0),
-            child: IconButton(
-              onPressed: () {
-                audioPlayerService.start(audioPath!);
-              },
-              icon: Icon(Icons.play_arrow, color: Colors.black, size: 40),
-            ),
+          child: IconButton(
+            onPressed: () {
+              audioPlayerService.start(audioPath!);
+            },
+            icon: Icon(Icons.play_arrow, color: Colors.white, size: 50),
           ),
         ),
         Container(
+          width: 44,
+          height: 44,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(color: Colors.grey),
+            color: Colors.orangeAccent,
           ),
           child: IconButton(
             onPressed: sendAudio,
-            iconSize: 30,
-            icon: Icon(Icons.arrow_circle_right_outlined),
+            icon: Icon(Icons.send_outlined, color: Colors.white),
           ),
         ),
       ],
@@ -171,27 +181,16 @@ class MicButton extends StatelessWidget {
       onLongPressEnd: (_) async {
         await stopRecording();
       },
-      child: Container(
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 100),
         decoration: BoxDecoration(
+          color: isRecording ? Colors.deepOrange : Colors.orangeAccent,
           shape: BoxShape.circle,
-          border: Border.all(
-            color: isRecording ? Colors.redAccent : Colors.deepPurple.shade400,
-            width: 3.5,
-          ),
         ),
-        child: Padding(
-          padding: EdgeInsets.all(12.0),
-          child: SizedBox(
-            width: 50,
-            height: 50,
-            child: Icon(
-              Icons.mic_sharp,
-              color: isRecording
-                  ? Colors.redAccent
-                  : Colors.deepPurple.shade400,
-              size: 50,
-            ),
-          ),
+        child: SizedBox(
+          width: 74,
+          height: 74,
+          child: Icon(Icons.mic_sharp, color: Colors.white, size: 40),
         ),
       ),
     );

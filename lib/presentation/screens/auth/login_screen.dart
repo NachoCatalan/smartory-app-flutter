@@ -19,7 +19,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _authSub = ref.listenManual<AsyncValue<AuthState>>(authProvider, (AsyncValue<AuthState>? previous, AsyncValue<AuthState> next) {
+      _authSub = ref.listenManual<AsyncValue<AuthState>>(authProvider, (
+        AsyncValue<AuthState>? previous,
+        AsyncValue<AuthState> next,
+      ) {
         next.whenOrNull(
           error: (error, stackTrace) {
             if (!mounted) return;
