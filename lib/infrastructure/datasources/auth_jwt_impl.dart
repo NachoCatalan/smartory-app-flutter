@@ -17,7 +17,7 @@ class AuthJwtDatasourceImpl extends AuthDatasource {
       final response = await dio.post(
         '/login',
         data: {"email": email, "password": password},
-        options: Options(connectTimeout: Duration(seconds: 5))
+        options: Options(connectTimeout: Duration(seconds: 5)),
       );
       final data = response.data;
       final authModel = AuthModel.fromJson(data);
@@ -29,13 +29,27 @@ class AuthJwtDatasourceImpl extends AuthDatasource {
   }
 
   @override
-  Future<void> registerUser(String username, String email, String password) {
-    throw UnimplementedError();
+  Future<AuthTokens> registerUser(String email, String password) async {
+    try {
+      final response = await dio.post(
+        '/register',
+        data: {"email": email, "password": password},
+      );
+      final data = response.data;
+      final authModel = AuthModel.fromJson(data);
+      return AuthMapper.toEntity(authModel);
+    } on DioException catch (e) {
+      final message = e.response?.data['message'] ?? 'Error de registro';
+      throw Exception(message);
+    }
   }
 
   @override
   Future<AuthTokens> obtainTokens(String refreshToken) async {
-    final response = await dio.post('/refresh', data: {'refreshToken': refreshToken});
+    final response = await dio.post(
+      '/refresh',
+      data: {'refreshToken': refreshToken},
+    );
     final data = response.data;
     final jsonTokens = AuthModel.fromJson(data);
     return AuthMapper.toEntity(jsonTokens);

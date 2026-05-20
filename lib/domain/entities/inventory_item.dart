@@ -1,21 +1,24 @@
-
-
 import 'package:smartory_app/domain/entities/product.dart';
+import 'package:smartory_app/infrastructure/dtos/create_item_dto.dart';
 
 class InventoryItem {
-
-  final int id;
+  final int? id;
   final Product product;
   final double quantity;
   final DateTime? expirationDate;
   final bool isFavorite;
-  
+  final double? totalAmount;
+  final double? remainingAmount;
+  final AmountUnit? amountUnit;
+
   InventoryItem({
-    required this.id,
+    this.id,
     required this.product,
-    required this.quantity,
+    this.quantity = 1.0,
     this.expirationDate,
     this.isFavorite = false,
+    this.totalAmount,
+    this.remainingAmount,
+    this.amountUnit,
   });
-  
 }

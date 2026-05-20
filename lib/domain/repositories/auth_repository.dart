@@ -1,9 +1,7 @@
-
 import 'package:smartory_app/domain/entities/auth_tokens.dart';
 
 abstract class AuthRepository {
-
-  Future<void> registerUser(String username, String email, String password);
+  Future<AuthTokens> registerUser(String email, String password);
 
   Future<AuthTokens> loginUser(String email, String password);
 

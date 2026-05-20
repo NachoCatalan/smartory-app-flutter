@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:smartory_app/presentation/widgets/auth/login_form.dart';
 
-import '../../utils/validators.dart';
-
 class ForgotPasswordForm extends StatefulWidget {
   const ForgotPasswordForm({super.key, required this.onChangeView});
 
@@ -13,7 +11,6 @@ class ForgotPasswordForm extends StatefulWidget {
 }
 
 class _ForgotPasswordFormState extends State<ForgotPasswordForm> {
-
   final _formKey = GlobalKey<FormState>();
   // Focus de inputs
   final emailFocus = FocusNode();
@@ -28,128 +25,130 @@ class _ForgotPasswordFormState extends State<ForgotPasswordForm> {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final textTheme = Theme.of(context).textTheme;
-
-    return Material(
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () => {
-          FocusScope.of(context).unfocus()
-        },
-        child: Container(
-          color: Colors.black,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Container(
-                width: double.infinity,
-                height: size.height * 0.9,
-                decoration: BoxDecoration(
-                  color: const Color.fromARGB(245, 255, 255, 255),
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => {FocusScope.of(context).unfocus()},
+      child: Material(
+        color: Color(0xffe0e0ff),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Column(
+                  spacing: 8,
+                  children: [
+                    Container(
+                      height: 60,
+                      width: 60,
+                      decoration: BoxDecoration(
+                        color: Color(0xff3f49e0),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Center(
+                        child: Icon(
+                          Icons.inventory_2,
+                          size: 30,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      'Recuperar contraseña',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 28,
+                      ),
+                    ),
+                  ],
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(45.0),
-                  child: Form(
-                    autovalidateMode: AutovalidateMode.onUserInteraction,
-                    key: _formKey,
+                SizedBox(height: 20),
+                Form(
+                  key: _formKey,
+                  child: Container(
+                    padding: EdgeInsets.all(40),
+                    decoration: BoxDecoration(
+                      color: Color.fromARGB(255, 255, 255, 255),
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+
                     child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      spacing: 30,
+                      spacing: 10,
                       children: [
                         Text(
-                          'Recuperación de contraseña',
-                          style: textTheme.titleLarge,
+                          'A continuación ingresa el email de la cuenta que deseas recuperar',
                         ),
-                        SizedBox(
-                          height: 5,
-                        ),
-                        Text(
-                          "A continuación ingrese el email de su cuenta a recuperar:",
-                          style: textTheme.bodyLarge,
-                        ),
-                        TextFormField(
-                          focusNode: emailFocus,
-                          textInputAction: TextInputAction.next,
-                          decoration: InputDecoration(
-                            border: OutlineInputBorder(),
-                            prefixIcon: Icon(Icons.email),
-                            label: Text('Email', style: textTheme.labelMedium),
-                          ),
-                          validator: (value) {
-                            if ( value == null || value.isEmpty ) {
-                              return 'Campo obligatorio';
-                            }
-                            if (!Validators.emailValidator(value)) {
-                              return 'Ingrese email valido';
-                            }
-                            return null;
-                          },
-                        ),
-                        FilledButton(
-                          child: Center(
-                            child: Text(
-                              'Recuperar cuenta',
-                              style: textTheme.labelLarge,
+                        Align(
+                          alignment: AlignmentGeometry.topLeft,
+                          child: Text(
+                            'EMAIL',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
                             ),
                           ),
-                          onPressed: () {
-                            if ( _formKey.currentState!.validate()) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Processing Data'))
-                              );
-                            }
-                            
-                          },
                         ),
-                        Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'Ya poseo una cuenta',
-                                style: textTheme.bodySmall,
-                              ),
-                              SizedBox(width: 5),
-                              Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  onTap: () {
-                                    widget.onChangeView(AuthView.login);
-                                  },
-
-                                  splashColor: Colors.deepPurple.withValues(
-                                    alpha: 0.1,
-                                  ),
-                                  highlightColor: Colors.deepPurple.withValues(
-                                    alpha: 0.1,
-                                  ),
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 6,
-                                    ),
-                                    child: Text(
-                                      'Ingresar',
-                                      style: TextStyle(
-                                        color: Colors.deepPurple
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
+                        TextFormField(
+                          textAlignVertical: TextAlignVertical.center,
+                          decoration: InputDecoration(
+                            border: InputBorder.none,
+                            prefixIcon: Icon(Icons.email_outlined),
+                            hintText: 'tu@email.com',
+                            filled: true,
+                            fillColor: Color(0xffe0e0ff),
                           ),
+                        ),
+
+                        SizedBox(height: 5),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 50,
+                          child: TextButton(
+                            onPressed: () {},
+                            style: ButtonStyle(
+                              shape: WidgetStatePropertyAll(
+                                BeveledRectangleBorder(),
+                              ),
+                              backgroundColor:
+                                  WidgetStateProperty.resolveWith<Color>((
+                                    states,
+                                  ) {
+                                    if (states.contains(WidgetState.pressed)) {
+                                      return Colors.green;
+                                    }
+                                    return Color(0xff3f49e0);
+                                  }),
+                            ),
+                            child: Text(
+                              'Enviar',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 10),
+                        InkWell(
+                          onTap: () => widget.onChangeView(AuthView.login),
+                          child: Text(
+                            'Volver al inicio',
+                            style: TextStyle(
+                              color: Color(0xff3f49e0),
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 }
-

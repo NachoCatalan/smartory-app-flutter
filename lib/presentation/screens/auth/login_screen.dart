@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smartory_app/presentation/providers/providers.dart';
 
@@ -23,12 +24,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         AsyncValue<AuthState>? previous,
         AsyncValue<AuthState> next,
       ) {
+        if (previous is AsyncLoading && next is AsyncError) {
+          final message = next.error.toString().replaceFirst('Exception: ', '');
+
+          ScaffoldMessenger.of(context)
+            ..clearSnackBars()
+            ..showSnackBar(SnackBar(content: Text(message)));
+        }
         next.whenOrNull(
-          error: (error, stackTrace) {
-            if (!mounted) return;
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text('Error al iniciar sesión')));
+          data: (authState) {
+            if (authState.status == AuthStatus.authenticated) {
+              context.goNamed('home');
+            }
           },
         );
       });
@@ -44,13 +51,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     void onChangeView(AuthView view) {
+      ref.read(authProvider.notifier).clearError();
       setState(() {
         currentView = view;
       });
     }
 
     return Scaffold(
-      resizeToAvoidBottomInset: true,
+      resizeToAvoidBottomInset: false,
       body: AnimatedSwitcher(
         duration: Duration(milliseconds: 500),
         child: switch (currentView) {

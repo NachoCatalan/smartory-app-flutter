@@ -1,8 +1,12 @@
-
-
-export './mic_audio_buttons.dart';
-export './products_carrousel.dart';
-
 // Auth
-
 export 'auth/auth.dart';
+// Buttons
+export 'buttons/buttons.dart';
+// Cards
+export 'cards/cards.dart';
+// Carrousel
+export 'carrousel/carrousel.dart';
+// Inputs
+export 'inputs/inputs.dart';
+// Modals
+export 'modals/modals.dart';
