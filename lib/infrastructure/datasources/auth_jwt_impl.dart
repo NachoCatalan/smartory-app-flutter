@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:smartory_app/config/config.dart';
 
 import 'package:smartory_app/domain/datasources/auth_datasource.dart';
 import 'package:smartory_app/domain/entities/auth_tokens.dart';
@@ -9,7 +10,7 @@ class AuthJwtDatasourceImpl extends AuthDatasource {
   late final Dio dio;
 
   AuthJwtDatasourceImpl()
-    : dio = Dio(BaseOptions(baseUrl: 'http://192.168.100.27:3000/api/auth'));
+    : dio = Dio(BaseOptions(baseUrl: '$backendUrl/api/auth'));
 
   @override
   Future<AuthTokens> loginUser(String email, String password) async {

@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:smartory_app/config/config.dart';
 
 import 'package:smartory_app/domain/datasources/product_datasource.dart';
 import 'package:smartory_app/domain/entities/product.dart';
@@ -9,9 +10,7 @@ class ProductsDatasourceImpl extends ProductDatasource {
   late final Dio dio;
 
   ProductsDatasourceImpl()
-    : dio = Dio(
-        BaseOptions(baseUrl: 'http://192.168.100.27:3000/api/products'),
-      );
+    : dio = Dio(BaseOptions(baseUrl: '$backendUrl/api/products'));
 
   @override
   Future<Product?> getProductById(String id) async {

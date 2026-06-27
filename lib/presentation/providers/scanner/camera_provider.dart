@@ -11,7 +11,11 @@ class CameraNotifier extends AsyncNotifier<CameraController> {
     if (cameras.isEmpty) {
       throw Exception('No se encontraron cámaras disponibles');
     }
-    final controller = CameraController(cameras.first, ResolutionPreset.max);
+    final controller = CameraController(
+      cameras.first,
+      ResolutionPreset.ultraHigh,
+      enableAudio: false,
+    );
     await controller.initialize();
 
     ref.onDispose(() {

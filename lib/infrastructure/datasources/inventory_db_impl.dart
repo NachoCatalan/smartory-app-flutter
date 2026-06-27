@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:smartory_app/config/config.dart';
 import 'package:smartory_app/domain/datasources/inventory_datasource.dart';
 import 'package:smartory_app/domain/entities/entities.dart';
 import 'package:smartory_app/infrastructure/dtos/create_item_dto.dart';
@@ -12,9 +13,7 @@ class InventoryDbDatasourceImpl extends InventoryDatasource {
   final Future<String?> Function() getValidAccessToken;
 
   InventoryDbDatasourceImpl({required this.getValidAccessToken})
-    : dio = Dio(
-        BaseOptions(baseUrl: 'http://192.168.100.27:3000/api/inventory'),
-      ) {
+    : dio = Dio(BaseOptions(baseUrl: '$backendUrl/api/inventory')) {
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {

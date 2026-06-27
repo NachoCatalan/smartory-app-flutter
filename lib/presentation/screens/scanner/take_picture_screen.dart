@@ -3,11 +3,14 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
+import 'package:image/image.dart' as img;
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:smartory_app/presentation/providers/catalogue/products_provider.dart';
 import 'package:smartory_app/presentation/providers/repositories/product_repository_provider.dart';
 import 'package:smartory_app/presentation/providers/scanner/camera_provider.dart';
-
-enum ScannerMode { receipt, barcode }
+import 'package:smartory_app/presentation/widgets/scanner/scanner_overlay.dart';
 
 class TakePictureScreen extends ConsumerStatefulWidget {
   const TakePictureScreen({super.key});
@@ -18,32 +21,45 @@ class TakePictureScreen extends ConsumerStatefulWidget {
 
 class _TakePictureScreenState extends ConsumerState<TakePictureScreen> {
   ScannerMode scannerMode = ScannerMode.receipt;
+
   XFile? capturedImage;
   bool isSending = false;
   Barcode? _barcode;
+  bool scanned = false;
+  InputImage? inputImage;
+  String? scannedText;
 
-  Widget _barcodePreview(Barcode? value) {
-    if (value == null) {
-      return const Text(
-        'Scan something!',
-        overflow: TextOverflow.fade,
-        style: TextStyle(color: Colors.white),
-      );
-    }
+  final textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
+  final MobileScannerController scannerController = MobileScannerController();
 
-    return Text(
-      value.displayValue ?? 'No display value.',
-      overflow: TextOverflow.fade,
-      style: const TextStyle(color: Colors.white),
-    );
+  _TakePictureScreenState();
+
+  @override
+  void dispose() {
+    scannerController.dispose();
+    super.dispose();
   }
 
-  void _handleBarcode(BarcodeCapture barcodes) async {
+  void _handleBarcode(BarcodeCapture captures) async {
+    if (scanned || !mounted) return;
+
+    final barcode = captures.barcodes.first;
+    final value = barcode.rawValue;
+    if (value == null) return;
+
+    setState(() {
+      _barcode = barcode;
+      scanned = true;
+    });
+
+    scannerController.pause();
+    await ref
+        .read(productsProvider.notifier)
+        .searchProductsByName(_barcode!.displayValue!);
+
+    final product = ref.read(productsProvider).value!.products;
     if (mounted) {
-      setState(() {
-        _barcode = barcodes.barcodes.firstOrNull;
-      });
-      showModalBottomSheet(
+      await showModalBottomSheet(
         useSafeArea: true,
         constraints: BoxConstraints(
           maxHeight: MediaQuery.of(context).size.height * 0.8,
@@ -59,80 +75,60 @@ class _TakePictureScreenState extends ConsumerState<TakePictureScreen> {
             padding: const EdgeInsets.all(20),
             child: SafeArea(
               child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 50,
-                      height: 5,
-                      margin: const EdgeInsets.only(bottom: 16),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade300,
-                        borderRadius: BorderRadius.circular(20),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 50,
+                        height: 5,
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
                       ),
-                    ),
-
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton(
-                        onPressed: () async {
-                          final rootContext = this.context;
-
-                          Navigator.of(context).pop(); // cierra el bottom sheet
-
-                          showDialog(
-                            context: rootContext,
-                            barrierDismissible: false,
-                            builder: (_) => const Center(
-                              child: CircularProgressIndicator(),
-                            ),
-                          );
-
-                          try {
-                            final product = ref
-                                .read(productsRepositoryProvider)
-                                .getProductsByName(_barcode!.displayValue!);
-                            print(product);
-                            if (!mounted) return;
-
-                            Navigator.of(rootContext).pop(); // cierra loading
-
-                            ScaffoldMessenger.of(rootContext).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Inventario actualizado correctamente',
-                                ),
-                              ),
-                            );
-
-                            // ref
-                            //     .read(audioInstructionsProvider.notifier)
-                            //     .clearInstructions();
-                          } catch (e) {
-                            if (!mounted) return;
-
-                            Navigator.of(rootContext).pop(); // cierra loading
-
-                            ScaffoldMessenger.of(rootContext).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Error al actualizar inventario: $e',
-                                ),
-                              ),
-                            );
-                          }
-                        },
-                        child: const Text('Confirmar'),
-                      ),
-                    ),
-                  ],
+                      Text(product!.first.name),
+                    ],
+                  ),
                 ),
               ),
             ),
           );
         },
       );
+      if (!mounted) return;
+      setState(() {
+        scanned = false;
+      });
     }
+  }
+
+  Future<String?> extractTextFromCapture(CameraController controller) async {
+    final textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
+    final picture = await controller.takePicture();
+    final preprocessedImage = await preprocessImage(picture.path);
+    final InputImage inputImage = InputImage.fromFilePath(preprocessedImage);
+
+    final recognizedText = await textRecognizer.processImage(inputImage);
+    await textRecognizer.close();
+    return recognizedText.text;
+  }
+
+  Future<String> preprocessImage(String imagePath) async {
+    final bytes = await File(imagePath).readAsBytes();
+    img.Image? image = img.decodeImage(bytes);
+    if (image == null) return imagePath;
+    image = img.grayscale(image);
+    image = img.adjustColor(image, contrast: 1.5);
+    if (image.width < 1000) {
+      image = img.copyResize(image, width: 1500);
+    }
+    final tempDir = await getTemporaryDirectory();
+    final processedPath = '${tempDir.path}/processed.jpg';
+    await File(processedPath).writeAsBytes(img.encodeJpg(image, quality: 95));
+    return processedPath;
   }
 
   @override
@@ -146,28 +142,19 @@ class _TakePictureScreenState extends ConsumerState<TakePictureScreen> {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                // if (capturedImage == null)
-                //   CameraPreview(controller)
-                // else
-                //   Image.file(File(capturedImage!.path), fit: BoxFit.cover),
-                MobileScanner(onDetect: _handleBarcode),
-                ScannerOverlay(mode: scannerMode),
-                Align(
-                  alignment: Alignment.topCenter,
-                  child: Container(
-                    alignment: Alignment.bottomCenter,
-                    height: 100,
-                    color: const Color.fromRGBO(0, 0, 0, 0.4),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        Expanded(
-                          child: Center(child: _barcodePreview(_barcode)),
-                        ),
-                      ],
-                    ),
+                if (scannedText == null)
+                  CameraPreview(controller)
+                else
+                  Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Text(scannedText ?? ''),
                   ),
-                ),
+                // MobileScanner(
+                //   onDetect: _handleBarcode,
+                //   controller: scannerController,
+                // ),
+                if (scannedText == null) ScannerOverlay(mode: scannerMode),
+
                 Positioned(
                   top: 16,
                   left: 16,
@@ -219,11 +206,12 @@ class _TakePictureScreenState extends ConsumerState<TakePictureScreen> {
                       ? Center(
                           child: GestureDetector(
                             onTap: () async {
-                              // final picture = await controller.takePicture();
-
-                              // setState(() {
-                              //   capturedImage = picture;
-                              // });
+                              final textResult = await extractTextFromCapture(
+                                controller,
+                              );
+                              setState(() {
+                                scannedText = textResult;
+                              });
                             },
                             child: Container(
                               width: 72,
@@ -244,10 +232,10 @@ class _TakePictureScreenState extends ConsumerState<TakePictureScreen> {
                           children: [
                             Expanded(
                               child: OutlinedButton.icon(
-                                onPressed: () {
-                                  // setState(() {
-                                  //   capturedImage = null;
-                                  // });
+                                onPressed: () async {
+                                  setState(() {
+                                    capturedImage = null;
+                                  });
                                 },
                                 icon: const Icon(Icons.close),
                                 label: const Text('Descartar'),
@@ -298,67 +286,5 @@ class _TakePictureScreenState extends ConsumerState<TakePictureScreen> {
         return const Center(child: CircularProgressIndicator());
       },
     );
-  }
-}
-
-class ScannerOverlay extends StatelessWidget {
-  final ScannerMode mode;
-
-  const ScannerOverlay({super.key, required this.mode});
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomPaint(
-      size: Size.infinite,
-      painter: ScannerOverlayPainter(mode: mode),
-    );
-  }
-}
-
-class ScannerOverlayPainter extends CustomPainter {
-  final ScannerMode mode;
-
-  ScannerOverlayPainter({required this.mode});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final backgroundPaint = Paint()
-      ..color = Colors.black.withValues(alpha: 0.8);
-
-    final clearPaint = Paint()..blendMode = BlendMode.clear;
-
-    final overlayLayer = Rect.fromLTWH(0, 0, size.width, size.height);
-
-    canvas.saveLayer(overlayLayer, Paint());
-
-    canvas.drawRect(overlayLayer, backgroundPaint);
-
-    final scanRect = Rect.fromCenter(
-      center: Offset(size.width / 2, size.height / 2),
-      width: size.width * 0.8,
-      height: mode == ScannerMode.receipt ? 420 : 160,
-    );
-
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(scanRect, const Radius.circular(20)),
-      clearPaint,
-    );
-
-    canvas.restore();
-
-    final borderPaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3;
-
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(scanRect, const Radius.circular(20)),
-      borderPaint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant ScannerOverlayPainter oldDelegate) {
-    return oldDelegate.mode != mode;
   }
 }

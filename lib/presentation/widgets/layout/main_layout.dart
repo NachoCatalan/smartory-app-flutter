@@ -4,7 +4,6 @@ import 'package:smartory_app/presentation/screens/catalog/catalog_screen.dart';
 import 'package:smartory_app/presentation/screens/home/home_screen.dart';
 import 'package:smartory_app/presentation/screens/inventory/inventory_screen.dart';
 import 'package:smartory_app/presentation/widgets/buttons/buttons.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
 
 class MainLayout extends StatefulWidget {
   final Widget child;
